@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use PhpParser\Node\Expr\FuncCall;
 use Illuminate\Support\Facades\Validator;
 use App\Models\User;
+use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends BaseController
 {
@@ -141,9 +142,15 @@ class AuthController extends BaseController
                 'password' => bcrypt($rut)
             ]);
 
+            // Generar un token de acceso para el usuario
+            $token = JWTAuth::fromUser($user);
+
             return response([
                 'message' => 'Usuario registrado exitosamente',
-                'data' => $user,
+                'data' => [
+                    'user' => $user,
+                    'token' => $token
+                ],
                 'error' => false
             ], 201);
         } catch (\Exception $e) {

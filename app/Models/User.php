@@ -60,4 +60,21 @@ class User extends Authenticatable implements JWTSubject
             'password' => 'hashed',
         ];
     }
+
+    /**
+     * Authentication guards configuration.
+     *
+     * @var array<string, array<string, string>>
+     */
+    protected $guards = [
+        'web' => [
+            'driver' => 'session',
+            'provider' => 'users',
+        ],
+
+        'api' => [
+            'driver' => 'jwt',
+            'provider' => 'users',
+        ],
+    ];
 }
