@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 use PhpParser\Node\Expr\FuncCall;
+use Illuminate\Support\Facades\Validator;
 use App\Models\User;
 
 class AuthController extends BaseController
@@ -93,45 +94,56 @@ class AuthController extends BaseController
 
     public function register(Request $request)
     {
+        // Validar los datos de entrada
+        $validator = Validator::make($request->all(), [
+            'rut' => 'required|string|unique:users|regex:/^[0-9]+[Kk0-9]$/',
+            'nombres' => 'required|string|min:3',
+            'apellidos' => 'required|string|min:3',
+            'telefono' => 'required|string|regex:/^\+569[0-9]{8}$/',
+            'email' => 'required|string|email|max:255|unique:users',
+        ], [
+            'rut.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
+            'email.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
+            'telefono.regex' => 'El teléfono móvil ingresado no es válido.',
+            'nombres.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
+            'apellidos.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
+            'rut.regex' => 'Ingrese el RUT sin puntos ni guion.',
+            'email.email' => 'Su correo electrónico no es válido.',
+        ]);
+
+        // Si la validación falla, devolver un error
+        if ($validator->fails()) {
+            return response([
+                'message' => 'Error de validación',
+                'data' => $validator->errors(),
+                'error' => true
+            ], 422);
+        }
+
+        // Validar el RUT chileno
+        $rut = strtoupper($request->input('rut'));
+        if (!$this->validateRut($rut)) {
+            return response([
+                'message' => 'El RUT no es válido',
+                'data' => [],
+                'error' => true
+            ], 422);
+        }
+
         try {
-            // Validacion de campos
-            $request->validate([
-                'rut' => 'required|unique:users,rut',
-                'name' => 'required|string|max:255',
-                'surname' => 'required|string|max:255',
-                'email' => 'required|string|email|max:255|unique:users,email',
-                'password' => 'required|string|min:6|confirmed',
-            ], [
-                'rut.required' => 'El RUT es obligatorio',
-                'rut.unique' => 'El RUT ya está registrado',
-                'name.required' => 'El nombre es obligatorio',
-                'surname.required' => 'El apellido es obligatorio',
-                'email.required' => 'El correo es obligatorio',
-                'email.email' => 'Formato incorrecto de correo',
-                'email.unique' => 'El correo ya está registrado',
-                'password.required' => 'La contraseña es obligatoria',
-                'password.min' => 'La contraseña debe tener al menos 6 caracteres',
-                'password.confirmed' => 'La confirmación de la contraseña no coincide',
-            ]);
-
-            // Creacion del usuario
+            // Crear el usuario
             $user = User::create([
-                'rut' => $request->rut,
-                'name' => $request->name,
-                'surname' => $request->surname,
-                'email' => $request->email,
-                'password' => bcrypt($request->password),
+                'rut' => $rut,
+                'nombres' => $request->input('nombres'),
+                'apellidos' => $request->input('apellidos'),
+                'telefono' => $request->input('telefono'),
+                'email' => $request->input('email'),
+                'password' => bcrypt($rut)
             ]);
-
-            // Generacion del token
-            $token = Auth::login($user);
 
             return response([
                 'message' => 'Usuario registrado exitosamente',
-                'data' => [
-                    'token' => $token,
-                    'user' => $user
-                ],
+                'data' => $user,
                 'error' => false
             ], 201);
         } catch (\Exception $e) {
@@ -142,5 +154,36 @@ class AuthController extends BaseController
             ], 500);
         }
     }
-        
+
+    private function validateRut($rut)
+    {
+        // Eliminar puntos y guiones
+        $rut = str_replace(['.', '-'], '', strtoupper($rut));
+        $number = substr($rut, 0, -1);
+        $dv = substr($rut, -1);
+
+        // Validar que el RUT tenga el formato correcto
+        if (!preg_match('/^[0-9]+[K0-9]$/', $rut)) {
+            return false;
+        }
+
+        // Calcular el dígito verificador
+        $sum = 0;
+        $factor = 2;
+        for ($i = strlen($number) - 1; $i >= 0; $i--) {
+            $sum += $number[$i] * $factor;
+            $factor = $factor == 7 ? 2 : $factor + 1;
+        }
+        $dv_calculated = 11 - ($sum % 11);
+        if ($dv_calculated == 11) {
+            $dv_calculated = '0';
+        } elseif ($dv_calculated == 10) {
+            $dv_calculated = 'K';
+        } else {
+            $dv_calculated = (string) $dv_calculated;
+        }
+
+        // Comparar el dígito verificador calculado con el proporcionado
+        return $dv_calculated === $dv;
+    }
 }
