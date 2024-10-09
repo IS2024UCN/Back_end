@@ -95,43 +95,47 @@ class AuthController extends BaseController
 
     public function register(Request $request)
     {
-        // Validar los datos de entrada
-        $validator = Validator::make($request->all(), [
-            'rut' => 'required|string|unique:users|regex:/^[0-9]+[Kk0-9]$/',
-            'nombres' => 'required|string|min:3',
-            'apellidos' => 'required|string|min:3',
-            'telefono' => 'required|string|regex:/^\+569[0-9]{8}$/',
-            'email' => 'required|string|email|max:255|unique:users',
-        ], [
-            'rut.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
-            'email.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
-            'telefono.regex' => 'El teléfono móvil ingresado no es válido.',
-            'nombres.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
-            'apellidos.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
-            'rut.regex' => 'Ingrese el RUT sin puntos ni guion.',
-            'email.email' => 'Su correo electrónico no es válido.',
-        ]);
-
-        // Si la validación falla, devolver un error
-        if ($validator->fails()) {
-            return response([
-                'message' => 'Error de validación',
-                'data' => $validator->errors(),
-                'error' => true
-            ], 422);
-        }
-
-        // Validar el RUT chileno
-        $rut = strtoupper($request->input('rut'));
-        if (!$this->validateRut($rut)) {
-            return response([
-                'message' => 'El RUT no es válido',
-                'data' => [],
-                'error' => true
-            ], 422);
-        }
-
         try {
+            // Validar los datos de entrada
+            $request->validate([
+                'rut' => ['required', 'string', 'unique:users', 'regex:/^[0-9]+[Kk0-9]$/', function($attribute, $value, $fail){
+                    if (preg_match('/[.-]/', $value)) {
+                        $fail('Debes ingresar el RUT sin puntos ni guion.');
+                    }
+                }],
+                'nombres' => 'required|string|min:3',
+                'apellidos' => 'required|string|min:3',
+                'telefono' => ['required', 'string', 'regex:/^\+56[0-9]{9}$/', function($attribute, $value, $fail){
+                    if(strlen($value) != 12) {
+                        $fail('El número debe tener 9 caracteres después del código de área +56.');
+                    }
+                }],
+                'email' => ['required', 'string', 'email', 'max:255', 'unique:users', function($attribute, $value, $fail){
+                    if(!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                        $fail('Formato incorrecto de correo');
+                    }
+                }],
+            ], [
+                'rut.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
+                'email.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
+                'telefono.regex' => 'El teléfono móvil ingresado no es válido.',
+                'nombres.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
+                'apellidos.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
+                'rut.regex' => 'Ingrese el RUT sin puntos ni guion.',
+                'email.email' => 'Su correo electrónico no es válido.',
+                'email.required' => 'Correo es obligatorio',
+            ]);
+
+            // Validar el RUT chileno
+            $rut = strtoupper($request->input('rut'));
+            if (!$this->validateRut($rut)) {
+                return response([
+                    'message' => 'El RUT no es válido',
+                    'data' => [],
+                    'error' => true
+                ], 422);
+            }
+
             // Crear el usuario
             $user = User::create([
                 'rut' => $rut,
