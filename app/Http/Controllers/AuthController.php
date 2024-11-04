@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Validator;
 
 class AuthController extends BaseController
 {
@@ -91,7 +92,7 @@ class AuthController extends BaseController
         ], 200);
     }
 
-    public function register(Request $request)
+    /**public function register(Request $request)
     {
         try {
             // Validar los datos de entrada
@@ -162,7 +163,7 @@ class AuthController extends BaseController
                 'error' => $e->getMessage()
             ], 500);
         }
-    }
+    }*/
 
     private function validateRut($rut)
     {
@@ -194,5 +195,31 @@ class AuthController extends BaseController
 
         // Comparar el dígito verificador calculado con el proporcionado
         return $dv_calculated === $dv;
+    }
+
+    public function register(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'name' => 'required|string|max:255',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|confirmed|min:6',
+        ]);
+        if ($validator->fails()) {
+            return response([
+                'message' => 'Error al registrar el usuario',
+                'data' => $validator->errors(),
+                'error' => true
+            ], 422);
+        }
+        $user = User::create(array_merge(
+            $validator->validated(),
+            ['password' => bcrypt($request->password)]
+        ));
+        return response([
+            'message' => 'Usuario registrado exitosamente',
+            'data' => $user,
+            'error' => false
+        ], 201);
+
     }
 }

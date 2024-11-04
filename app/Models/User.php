@@ -11,6 +11,8 @@ use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
+    const DEFAULT_ROLE = 0;
+
     use HasFactory, Notifiable;
 
     /**
@@ -22,6 +24,10 @@ class User extends Authenticatable implements JWTSubject
         'name',
         'email',
         'password',
+    ];
+
+    protected $attributes = [
+        'role_id' => self::DEFAULT_ROLE,
     ];
     
     public function getJWTIdentifier()
