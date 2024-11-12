@@ -98,8 +98,16 @@ class AuthController extends BaseController
             $request->validate([
                 'rut' => ['required', 'string', 'unique:users', 'regex:/^[0-9]+[Kk0-9]$/', function($attribute, $value, $fail){
                 }],
-                'name' => 'required|string|min:3',
-                'last_name' => 'required|string|min:3',
+                'name' => ['required', 'string', 'min:3', 'regex:/^[a-zA-Z\s]+$/', function($attribute, $value, $fail){
+                    if (preg_match('/[0-9]/', $value)) {
+                        $fail('El nombre no puede contener números');
+                    }
+                }],
+                'last_name' => ['required', 'string', 'min:3', 'regex:/^[a-zA-Z\s]+$/', function($attribute, $value, $fail){
+                    if (preg_match('/[0-9]/', $value)) {
+                        $fail('El apellido no puede contener números');
+                    }
+                }],
                 'phone' => ['required', 'string', 'regex:/^[0-9]{9}$/', function($attribute, $value, $fail){
                 }],
                 
@@ -119,8 +127,10 @@ class AuthController extends BaseController
                 'phone.required' => 'Telefono requrido',
                 'name.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
                 'name.required' => 'Nombre requerido',
+                'name.regex' => 'El nombre no puede contener números.',
                 'last_name.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
-                'last_name.required' => 'Apellido requerido'
+                'last_name.required' => 'Apellido requerido',
+                'last_name.regex' => 'El apellido no puede contener números.'
                 
                 
             ]); 
@@ -139,11 +149,14 @@ class AuthController extends BaseController
 
             // Agregar el prefijo +56 al teléfono
             $phone = '+56' . $request->input('phone');
+
+            $name = strtolower($request->input('name'));
+            $last_name = strtolower($request->input('last_name'));
             
             // Crear el usuario
             $user = User::create([
                 'rut' => $rut,
-                'name' => $request->input('name') . ' ' . $request->input('last_name'),
+                'name' => $name . ' ' . $last_name,
                 'last_name' => $request->input('last_name'),
                 'phone' => $phone,
                 'email' => $request->input('email'),
