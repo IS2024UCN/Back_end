@@ -31,6 +31,24 @@ class AuthController extends BaseController
             'email.email' => 'Formato incorrecto de correo',
             'password.required' => 'Contraseña es obligatoria'
         ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if(!$user){
+            return response([
+                'message' => 'Las credenciales de acceso son incorrectas o el usuario no está registrado en el sistema',
+                'error' => true
+            ], 401);
+        }
+
+        if(!$user->is_active){
+            return response([
+                'message' => 'Usuario deshabilitado. Contacte al administrador',
+                'error' => true 
+            ], 403);
+        }
+
+
         // Intento de auteticacion
         $token = Auth::attempt($request->only('email','password'));
 
@@ -62,6 +80,49 @@ class AuthController extends BaseController
             ], 500);
         }
     }
+
+    public function resetPassword(Request $request){
+        try{
+            $request->validare([
+                'email' => 'required|email|exists:users,email',
+                'new_password' => [
+                    'required',
+                    'min:8',
+                    'regex:/[A-Z/', //Requiere al menos una mayúscula
+                    'regex:[0-9]/', //Requiere al menos un número
+                ]
+                ]);
+            
+                $user = User::where('email', $request->email)->first();
+
+                if(!$request->new_password) {
+                    return response([
+                        'message' => 'La nueva contraseña no cumple los estándares de seguridad',
+                        'error' => true
+                    ], 400);
+                }
+
+                $user->password = Hash::make($request->new_password);
+                $user->save();
+
+                return response([
+                    'message' => 'Contraseña actualizada exitosamente',
+                    'error' => false
+                ]);
+
+        } catch (ValidationException $e){
+            return response([
+                'message' => 'La nueva contraseña no cumple los estándares de seguridad',
+                'error' => true
+            ], 400);
+        } catch (\Exception $e){
+            return response([
+                'message' => 'Error en el servidor',
+                'error' => true
+            ], 500);
+        }
+    }
+
 
     public function logout (){
         try{
