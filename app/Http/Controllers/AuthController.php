@@ -49,14 +49,15 @@ class AuthController extends BaseController
             'message' => 'Inicio de sesion exitoso',
             'data' => [
                 'token' => $token,
-                'user' => $user
+                'user' => $user,
+                'user_role' => $user->role_id
             ],
             'error' => false
         ]);}
         catch (\Exception $e) {
             // Manejo de excepciones generales
             return response([
-                'message' => 'Error al crear el usuario',
+                'message' => 'Error al iniciar sesion',
                 'data' => [],
                 'error' => $e->getMessage()
             ], 500);
@@ -74,7 +75,7 @@ class AuthController extends BaseController
     }
         catch (\Exception $e) {
             return response([
-              'message' => 'Error al crear el usuario',
+              'message' => 'Error al cerrar sesion',
                'data' => [],
               'error' => $e->getMessage()
          ], 500);
@@ -146,23 +147,18 @@ class AuthController extends BaseController
             }
             // Convertir el RUT a mayúsculas
             $rut = strtoupper($rut);
-
             // Agregar el prefijo +56 al teléfono
             $phone = '+56' . $request->input('phone');
-
             $name = strtolower($request->input('name'));
             $last_name = strtolower($request->input('last_name'));
-            
             // Crear el usuario
             $user = User::create([
                 'rut' => $rut,
                 'name' => $name . ' ' . $last_name,
-                'last_name' => $request->input('last_name'),
                 'phone' => $phone,
                 'email' => $request->input('email'),
                 'password' => bcrypt($rut)
             ]);
-            
             // Generar un token de acceso para el usuario
             $token = JWTAuth::fromUser($user);         
 
