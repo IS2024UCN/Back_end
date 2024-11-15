@@ -7,6 +7,9 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\Log;
 
 class AuthController extends BaseController
 {
@@ -74,7 +77,7 @@ class AuthController extends BaseController
         catch (\Exception $e) {
             // Manejo de excepciones generales
             return response([
-                'message' => 'Error al crear el usuario',
+                'message' => 'Error al iniciar sesion',
                 'data' => [],
                 'error' => $e->getMessage()
             ], 500);
@@ -83,7 +86,8 @@ class AuthController extends BaseController
 
     public function resetPassword(Request $request){
         try{
-            $request->validare([
+            
+            $request->validate([
                 'email' => 'required|email|exists:users,email',
                 'new_password' => [
                     'required',
@@ -91,30 +95,31 @@ class AuthController extends BaseController
                     'regex:/[A-Z/', //Requiere al menos una mayúscula
                     'regex:[0-9]/', //Requiere al menos un número
                 ]
+                ], [
+                    'email.required' => 'Correo requerido',
+                    'email.email' => 'Formato incorrecto de correo',
+                    'email.exists' => 'El correo no está registrado en el sistema',
+                    'new_password.required' => 'Contraseña requerida',
+                    'new_password.min' => 'La contraseña debe tener al menos 8 caracteres',
+                    'new_password.regex' => 'La contraseña debe contener al menos una mayúscula y un número'
                 ]);
-            
-                $user = User::where('email', $request->email)->first();
+                
+            $user = User::where('email', $request->email)->first();
 
-                if(!$request->new_password) {
-                    return response([
-                        'message' => 'La nueva contraseña no cumple los estándares de seguridad',
-                        'error' => true
-                    ], 400);
-                }
-
-                $user->password = Hash::make($request->new_password);
-                $user->save();
-
+            if(!$request->new_password) {
                 return response([
-                    'message' => 'Contraseña actualizada exitosamente',
-                    'error' => false
-                ]);
+                     'message' => 'La nueva contraseña no cumple los estándares de seguridad',
+                     'error' => true
+                ], 400);
+            }
 
-        } catch (ValidationException $e){
+            $user->password = Hash::make($request->new_password);
+            $user->save();
+
             return response([
-                'message' => 'La nueva contraseña no cumple los estándares de seguridad',
-                'error' => true
-            ], 400);
+                'message' => 'Contraseña actualizada exitosamente',
+                'error' => false
+            ], 200);
         } catch (\Exception $e){
             return response([
                 'message' => 'Error en el servidor',
@@ -135,7 +140,7 @@ class AuthController extends BaseController
     }
         catch (\Exception $e) {
             return response([
-              'message' => 'Error al crear el usuario',
+              'message' => 'Error al cerrar sesion',
                'data' => [],
               'error' => $e->getMessage()
          ], 500);
@@ -218,7 +223,6 @@ class AuthController extends BaseController
             $user = User::create([
                 'rut' => $rut,
                 'name' => $name . ' ' . $last_name,
-                'last_name' => $request->input('last_name'),
                 'phone' => $phone,
                 'email' => $request->input('email'),
                 'password' => bcrypt($rut)
