@@ -50,14 +50,15 @@ class AuthController extends BaseController
             'message' => 'Inicio de sesion exitoso',
             'data' => [
                 'token' => $token,
-                'user' => $user
+                'user' => $user,
+                'user_role' => $user->role_id
             ],
             'error' => false
         ]);}
         catch (\Exception $e) {
             // Manejo de excepciones generales
             return response([
-                'message' => 'Error al crear el usuario',
+                'message' => 'Error al iniciar sesion',
                 'data' => [],
                 'error' => $e->getMessage()
             ], 500);
@@ -75,7 +76,7 @@ class AuthController extends BaseController
     }
         catch (\Exception $e) {
             return response([
-              'message' => 'Error al crear el usuario',
+              'message' => 'Error al cerrar sesion',
                'data' => [],
               'error' => $e->getMessage()
          ], 500);
@@ -98,32 +99,43 @@ class AuthController extends BaseController
             // Validar los datos de entrada
             $request->validate([
                 'rut' => ['required', 'string', 'unique:users', 'regex:/^[0-9]+[Kk0-9]$/', function($attribute, $value, $fail){
-                    if (preg_match('/[.-]/', $value)) {
-                        $fail('Debes ingresar el RUT sin puntos ni guion.');
+                }],
+                'name' => ['required', 'string', 'min:3', 'regex:/^[a-zA-Z\s]+$/', function($attribute, $value, $fail){
+                    if (preg_match('/[0-9]/', $value)) {
+                        $fail('El nombre no puede contener números');
                     }
                 }],
-                'nombres' => 'required|string|min:3',
-                'apellidos' => 'required|string|min:3',
-                'telefono' => ['required', 'string', 'regex:/^\+56[0-9]{9}$/', function($attribute, $value, $fail){
-                    if(strlen($value) != 12) {
-                        $fail('El número debe tener 9 caracteres después del código de área +56.');
+                'last_name' => ['required', 'string', 'min:3', 'regex:/^[a-zA-Z\s]+$/', function($attribute, $value, $fail){
+                    if (preg_match('/[0-9]/', $value)) {
+                        $fail('El apellido no puede contener números');
                     }
                 }],
+                'phone' => ['required', 'string', 'regex:/^[0-9]{9}$/', function($attribute, $value, $fail){
+                }],
+                
                 'email' => ['required', 'string', 'email', 'max:255', 'unique:users', function($attribute, $value, $fail){
                     if(!filter_var($value, FILTER_VALIDATE_EMAIL)) {
                         $fail('Formato incorrecto de correo');
                     }
                 }],
             ], [
-                'rut.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
-                'email.unique' => 'El RUT y/o correo electrónico ya existen en el sistema. Intente iniciar sesión.',
-                'telefono.regex' => 'El teléfono móvil ingresado no es válido.',
-                'nombres.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
-                'apellidos.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
-                'rut.regex' => 'Ingrese el RUT sin puntos ni guion.',
-                'email.email' => 'Su correo electrónico no es válido.',
-                'email.required' => 'Correo es obligatorio',
-            ]);
+                'rut.unique' => 'Este RUT ya esta registrado en el sistema. Intente iniciar sesión.',
+                'rut.regex' => 'El RUT ingresado no es válido.',
+                'rut.required' => 'RUT requerido',
+                'email.unique' => 'Este correo electrónico ya esta registrado en el sistema. Intente iniciar sesión.',
+                'email.email' => 'Este correo electrónico no es válido.',
+                'email.required' => 'Correo requerido',
+                'phone.regex' => 'El teléfono móvil ingresado no es válido.',
+                'phone.required' => 'Telefono requrido',
+                'name.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
+                'name.required' => 'Nombre requerido',
+                'name.regex' => 'El nombre no puede contener números.',
+                'last_name.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
+                'last_name.required' => 'Apellido requerido',
+                'last_name.regex' => 'El apellido no puede contener números.'
+                
+                
+            ]); 
 
             // Validar el RUT chileno
             $rut = strtoupper($request->input('rut'));
@@ -134,19 +146,22 @@ class AuthController extends BaseController
                     'error' => true
                 ], 422);
             }
-
+            // Convertir el RUT a mayúsculas
+            $rut = strtoupper($rut);
+            // Agregar el prefijo +56 al teléfono
+            $phone = '+56' . $request->input('phone');
+            $name = strtolower($request->input('name'));
+            $last_name = strtolower($request->input('last_name'));
             // Crear el usuario
             $user = User::create([
                 'rut' => $rut,
-                'nombres' => $request->input('nombres'),
-                'apellidos' => $request->input('apellidos'),
-                'telefono' => $request->input('telefono'),
+                'name' => $name . ' ' . $last_name,
+                'phone' => $phone,
                 'email' => $request->input('email'),
                 'password' => bcrypt($rut)
             ]);
-
             // Generar un token de acceso para el usuario
-            $token = JWTAuth::fromUser($user);
+            $token = JWTAuth::fromUser($user);         
 
             return response([
                 'message' => 'Usuario registrado exitosamente',
