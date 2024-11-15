@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Support\Facades\Hash;
 
 class AuthController extends BaseController
 {
@@ -90,6 +91,52 @@ class AuthController extends BaseController
             ],
             'error' => false
         ], 200);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        try {
+            // Validar el correo electrónico
+            $request->validate([
+                'email' => ['required', 'email', function($attribute, $value, $fail){
+                    if(!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                        $fail('Formato incorrecto de correo');
+                    }
+                }],
+                'password' => ['required', 'string', 'min:8', 'regex:/[A-Z]/', 'regex:/[0-9]/']
+            ], [
+                'email.required' => 'Correo es obligatorio',
+                'email.email' => 'Formato incorrecto de correo',
+                'password.required' => 'Contraseña es obligatoria',
+                'password.min' => 'La contraseña debe tener al menos 8 caracteres',
+                'password.regex' => 'La contraseña debe contener al menos una letra mayúscula y un número'
+            ]);
+
+            // Verificar que el usuario esté registrado
+            $user = User::where('email', $request->email)->first();
+            if (!$user) {
+                return response([
+                    'message' => 'El usuario no está registrado en el sistema',
+                    'error' => true
+                ], 404);
+            }
+
+            // Actualizar la contraseña del usuario
+            $user->password = Hash::make($request->password);
+            $user->save();
+
+            return response([
+                'message' => 'Contraseña actualizada exitosamente',
+                'data' => [],
+                'error' => false
+            ], 200);
+        } catch (\Exception $e) {
+            return response([
+                'message' => 'Error al actualizar la contraseña',
+                'data' => [],
+                'error' => $e->getMessage()
+            ], 500);
+        }
     }
 
     public function register(Request $request)
