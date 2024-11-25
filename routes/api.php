@@ -12,4 +12,5 @@ Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register
 // Ruta para la recuperacion de contraseña
 Route::post('/resetPassword', [\App\Http\Controllers\AuthController::class, 'resetPassword'])->name('resetPassword');
 
-
+// ruta para el getproducts
+Route::get('/getProducts', [\App\Http\Controllers\AuthController::class, 'getProducts'])->name('getProducts');

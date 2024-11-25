@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
+use App\Models\Product;
 
 class AuthController extends BaseController
 {
@@ -69,6 +70,7 @@ class AuthController extends BaseController
         try{
             Auth::logout();
             return response([
+                // Mensaje de cierre de sesion
                 'message' => 'Sesion Cerrada',
                 'data' => [],
                 'error' => false
@@ -76,6 +78,7 @@ class AuthController extends BaseController
     }
         catch (\Exception $e) {
             return response([
+            // Mensaje de error al cerrar sesion
               'message' => 'Error al cerrar sesion',
                'data' => [],
               'error' => $e->getMessage()
@@ -85,6 +88,7 @@ class AuthController extends BaseController
 
     public function UserLogged(){
         return response([
+            // Mensaje de usuario autenticado
             'message' => 'Usuario Autenticado',
             'data' => [
                 'user' => Auth::user()
@@ -96,7 +100,7 @@ class AuthController extends BaseController
     public function resetPassword(Request $request)
     {
         try {
-            // Validar el correo electrónico
+            // Validar los datos de entrada
             $request->validate([
                 'email' => ['required', 'email', function($attribute, $value, $fail){
                     if(!filter_var($value, FILTER_VALIDATE_EMAIL)) {
@@ -257,4 +261,39 @@ class AuthController extends BaseController
         // Comparar el dígito verificador calculado con el proporcionado
         return $dv_calculated === $dv;
     }
+    
+
+    public function getProducts(Request $request)
+    {
+        // Determinar valores predeterminados en caso de no ingresar limit y page
+        $limit = $request->query('limit', 10);
+        $page = $request->query('page', 1);
+
+        // validaciones de limit y page numericos
+        if (!is_numeric($limit) || $limit <= 0) {
+            $limit = 10;
+        }
+
+        if (!is_numeric($page) || $page <= 0) {
+            $page = 1;
+        }
+
+        // Calcular el offset
+        $offset = ($page - 1) * $limit;
+
+        // Obtener los productos con paginación
+        $products = Product::offset($offset)->limit($limit)->get();
+        $totalProducts = Product::count();
+        $totalPages = ceil($totalProducts / $limit);
+
+        // Construir la respuesta
+        return response()->json([
+            'total_products' => $totalProducts,
+            'total_pages' => $totalPages,
+            'current_page' => $page,
+            'limit' => $limit,
+            'data' => $products
+        ]);
+    }
+
 }
