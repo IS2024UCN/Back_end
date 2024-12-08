@@ -15,9 +15,12 @@ class Product extends Model
      * @var array
      */
     protected $fillable = [
-        'name',
-        'description',
+        'title',
+        'creator',
         'price',
-        'stock',
+        'year',
+        'isEnable',
+        'type',
+        'ISBN'
     ];
 }

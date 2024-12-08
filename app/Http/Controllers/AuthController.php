@@ -262,7 +262,6 @@ class AuthController extends BaseController
         return $dv_calculated === $dv;
     }
     
-
     public function getProducts(Request $request)
     {
         // Determinar valores predeterminados en caso de no ingresar limit y page
