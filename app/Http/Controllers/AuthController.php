@@ -10,7 +10,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Log;
-
+use Exception;
+use Illuminate\Database\QueryException;
 
 class AuthController extends BaseController
 {
@@ -45,7 +46,7 @@ class AuthController extends BaseController
             ], 401);
         }
 
-        if(!$user->is_active){
+        if(!$user->active){
             return response([
                 'message' => 'Usuario deshabilitado. Contacte al administrador',
                 'error' => true 
@@ -277,6 +278,8 @@ class AuthController extends BaseController
         // Comparar el dígito verificador calculado con el proporcionado
         return $dv_calculated === $dv;
     }
+
+    
 }
 
-
+    

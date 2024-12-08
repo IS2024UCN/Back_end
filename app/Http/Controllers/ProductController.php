@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 
 use Illuminate\Http\Request;
+use Exception;
+use Illuminate\Database\QueryException;
 
 class ProductController extends Controller
 {
@@ -43,5 +45,48 @@ class ProductController extends Controller
             'limit' => $limit,
             'data' => $products
         ]);
+    }
+    public function registerProduct(Request $request){
+        try{
+            $validatedData = $request->validate([
+                'title' => 'required|string|max:255',
+                'creator' => 'required|string|max:255',
+                'ISBN' => 'required|string|unique:products,ISBN',
+                'publisher' => 'nullable|string|max:255',
+                'release_date' => 'nullable|date',
+                'rental_price' => 'required|numeric|min:0',
+                'initial_stock' => 'required|integer|min:1',
+                'type' => 'required|string|in:libro,pelicula',
+            ]);
+            $product = new Product();
+            $product->title = $validatedData['title'];
+            $product->creator = $validatedData['creator'];
+            $product->ISBN = $validatedData['ISBN'];
+            $product->publisher = $validatedData['publisher'] ?? null;
+            $product->release_date = $validatedData['release_date'] ?? null;
+            $product->rental_price = $validatedData['rental_price'];
+            $product->initial_stock = $validatedData['initial_stock'];
+            $product->available_stock = $validatedData['initial_stock'];
+            $product->type = $validatedData['type'];
+            $product->is_enabled = true;
+
+            $product->save();
+
+            return response()->json([
+                'message' => 'Producto registrado correctamente',
+                'data' => $product,
+            ], 201);
+
+        } catch (QueryException $e){
+            return response()->json([
+                'error' => 'Error al registrar el producto',
+                'details' => $e->getMessage()],
+                500);
+        } catch (Exception $e){
+            return response()->json([
+                'error' => 'Ocurrio un error inesperado',
+                'details' => $e->getMessage()
+            ], 500);
+        }
     }
 }
