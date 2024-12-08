@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
-use App\Models\Product;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -127,5 +127,46 @@ class UserController extends Controller
 
         // Comparar el dígito verificador calculado con el proporcionado
         return $dv_calculated === $dv;
+    }
+
+    public function updatePassword(Request $request){
+        try{
+            $request->validate([
+                'current_password' => 'required',
+                'new_password' => [
+                    'required',
+                    'min:8',
+                    'confirmed',
+                    'regex:/[A-Z]/',
+                    'regex:/[a-z]/',
+                    'regex:/[0-9]/',
+                    'regex:/[@$!%*#?&]/'
+                ],
+            ]);
+
+            $user = Auth::user();
+
+            if(!Hash::check($request->current_password, $user->password)){
+                return response()->json([
+                    'error' => 'Contraseña actual incorrecta'],
+                    400);
+            }
+            if($request->current_password === $request->new_password){
+                return response()->json([
+                    'error' => 'La nueva contraseña no puede ser igual a la actual'],
+                    400);
+            }
+
+            User::where('id', $user->id)->update(['password' => Hash::make($request->new_password)]);
+
+            return response()->json([
+                'message' => 'Contraseña actualizada correctamente'],
+            200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar la contraseña',
+                'details' => $e->getMessage()],
+                500);
+        }
     }
 }

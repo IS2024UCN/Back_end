@@ -9,6 +9,7 @@ Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])-
 
 // Rutas del UserController
 Route::post('/register', [\App\Http\Controllers\UserController::class, 'register'])->name('register');
+Route::post('/update-Password', [\App\Http\Controllers\UserController::class, 'updatePassword'])->middleware(['api', 'auth']);
 
 // Rutas del ProductController
 Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');
