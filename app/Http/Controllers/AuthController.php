@@ -84,47 +84,44 @@ class AuthController extends BaseController
         }
     }
 
-    public function resetPassword(Request $request){
+    public function updatePassword(Request $request){
         try{
-            
             $request->validate([
-                'email' => 'required|email|exists:users,email',
+                'current_password' => 'required',
                 'new_password' => [
                     'required',
                     'min:8',
-                    'regex:/[A-Z/', //Requiere al menos una mayúscula
-                    'regex:[0-9]/', //Requiere al menos un número
-                ]
-                ], [
-                    'email.required' => 'Correo requerido',
-                    'email.email' => 'Formato incorrecto de correo',
-                    'email.exists' => 'El correo no está registrado en el sistema',
-                    'new_password.required' => 'Contraseña requerida',
-                    'new_password.min' => 'La contraseña debe tener al menos 8 caracteres',
-                    'new_password.regex' => 'La contraseña debe contener al menos una mayúscula y un número'
-                ]);
-                
-            $user = User::where('email', $request->email)->first();
+                    'confirmed',
+                    'regex:/[A-Z]/',
+                    'regex:/[a-z]/',
+                    'regex:/[0-9]/',
+                    'regex:/[@$!%*#?&]/'
+                ],
+            ]);
 
-            if(!$request->new_password) {
-                return response([
-                     'message' => 'La nueva contraseña no cumple los estándares de seguridad',
-                     'error' => true
-                ], 400);
+            $user = Auth::user();
+
+            if(!Hash::check($request->current_password, $user->password)){
+                return response()->json([
+                    'error' => 'Contraseña actual incorrecta'],
+                    400);
+            }
+            if($request->current_password === $request->new_password){
+                return response()->json([
+                    'error' => 'La nueva contraseña no puede ser igual a la actual'],
+                    400);
             }
 
-            $user->password = Hash::make($request->new_password);
-            $user->save();
+            User::where('id', $user->id)->update(['password' => Hash::make($request->new_password)]);
 
-            return response([
-                'message' => 'Contraseña actualizada exitosamente',
-                'error' => false
-            ], 200);
-        } catch (\Exception $e){
-            return response([
-                'message' => 'Error en el servidor',
-                'error' => true
-            ], 500);
+            return response()->json([
+                'message' => 'Contraseña actualizada correctamente'],
+            200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Error al actualizar la contraseña',
+                'details' => $e->getMessage()],
+                500);
         }
     }
 
