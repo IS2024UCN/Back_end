@@ -2,15 +2,13 @@
 
 use Illuminate\Support\Facades\Route;
 
+// Rutas del AuthController
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
 Route::get('/userlogged', [\App\Http\Controllers\AuthController::class, 'userLogged'])->middleware(['api', 'auth']);
 Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->middleware(['api', 'auth']);
 
-// Ruta para el registro de usuarios
-Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register'])->name('register');
+// Rutas del UserController
+Route::post('/register', [\App\Http\Controllers\UserController::class, 'register'])->name('register');
 
-// Ruta para la recuperacion de contraseña
-Route::post('/resetPassword', [\App\Http\Controllers\AuthController::class, 'resetPassword'])->name('resetPassword');
-
-// ruta para el getproducts
-Route::get('/getProducts', [\App\Http\Controllers\AuthController::class, 'getProducts'])->name('getProducts');
+// Rutas del ProductController
+Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');
