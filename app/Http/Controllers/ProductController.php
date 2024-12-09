@@ -8,10 +8,6 @@ use Illuminate\Http\Request;
 class ProductController extends Controller
 {
     //
-
-
-
-
     public function getProducts(Request $request)
     {
         // Determinar valores predeterminados en caso de no ingresar limit y page
