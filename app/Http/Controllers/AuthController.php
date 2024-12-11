@@ -13,13 +13,11 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthController extends BaseController
 {
-    public function __construct()
-    {
+    public function __construct(){
         $this->middleware('auth:api', ['except' => ['login','register']]);
     }
 
-    public function login (Request $request)
-    {   
+    public function login (Request $request){   
         try{
         // Validacion de campos con mensaje personalizado para correo y formato incorrecto
         $request->validate([
@@ -112,8 +110,7 @@ class AuthController extends BaseController
         ], 200);
     }
 
-    public function register(Request $request)
-    {
+    public function register(Request $request){
         try {
             // Validar los datos de entrada
             $request->validate([
@@ -203,8 +200,7 @@ class AuthController extends BaseController
         }
     }
 
-    private function validateRut($rut)
-    {
+    private function validateRut($rut){
         // Eliminar puntos y guiones
         $rut = str_replace(['.', '-'], '', strtoupper($rut));
         $number = substr($rut, 0, -1);

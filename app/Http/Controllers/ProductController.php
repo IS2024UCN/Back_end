@@ -10,8 +10,7 @@ use Illuminate\Database\QueryException;
 class ProductController extends Controller
 {
     //
-    public function getProducts(Request $request)
-    {
+    public function getProducts(Request $request){
         // Determinar valores predeterminados en caso de no ingresar limit y page
         $limit = $request->query('limit', 10);
         $page = $request->query('page', 1);
@@ -42,6 +41,7 @@ class ProductController extends Controller
             'data' => $products
         ]);
     }
+    
     public function registerProduct(Request $request){
         try{
             $validatedData = $request->validate([
