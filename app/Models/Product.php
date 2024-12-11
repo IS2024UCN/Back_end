@@ -17,10 +17,22 @@ class Product extends Model
     protected $fillable = [
         'title',
         'creator',
-        'price',
-        'year',
-        'isEnable',
+        'ISBN_books',
+        'ISBN_movies',
+        'publisher',
+        'release_date',
+        'rental_price',
+        'initial_stock',
+        'available_stock',
         'type',
-        'ISBN'
+        'is_enabled'
+    ];
+
+    protected $casts = [
+        'release_date' => 'date',
+        'rental_price' => 'decimal:2',
+        'initial_stock' => 'integer',
+        'available_stock' => 'integer',
+        'is_enabled' => 'boolean'
     ];
 }

@@ -15,11 +15,15 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('creator');
-            $table->decimal('price', 8, 2);
-            $table->integer('year');
-            $table->boolean('isEnable');
-            $table->string('type');
-            $table->string('ISBN');
+            $table->string('ISBN_books')->nullable()->unique();
+            $table->string('ISBN_movies')->nullable()->unique();
+            $table->string('publisher')->nullable();
+            $table->date('release_date')->nullable();
+            $table->decimal('rental_price', 8, 2);
+            $table->integer('initial_stock');
+            $table->integer('available_stock'); 
+            $table->boolean('is_enabled')->default(true); 
+            $table->string('type'); 
             $table->timestamps();
         });
     }
