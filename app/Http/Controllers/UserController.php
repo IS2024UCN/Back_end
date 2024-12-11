@@ -173,8 +173,7 @@ class UserController extends Controller
         }
     }
 
-    public function registerWorker(Request $request)
-    {
+    public function registerWorker(Request $request){
         try {
             // Validar los datos de entrada
             $request->validate([
@@ -263,8 +262,7 @@ class UserController extends Controller
     }
 
     // Método para listar todos los usuarios con paginación
-    public function getWorkers(Request $request)
-    {
+    public function getWorkers(Request $request){
         // Determinar valores predeterminados en caso de no ingresar limit y page
         $limit = $request->query('limit', 10);
         $page = $request->query('page', 1);
@@ -305,8 +303,7 @@ class UserController extends Controller
     }
 
     // Método para habilitar o deshabilitar un trabajador
-    public function toggleWorkerStatus(Request $request, $id)
-    {
+    public function toggleWorkerStatus(Request $request, $id){
         // Verificar si el usuario autenticado es un administrador
         if ($request->user()->role_id != 2) {
             return response([
@@ -339,8 +336,7 @@ class UserController extends Controller
     }
 
     // Método para actualizar la información de un trabajador
-    public function updateWorker(Request $request, $id)
-    {
+    public function updateWorker(Request $request, $id){
         $users = User::find($id);
 
         if (!$users) {
