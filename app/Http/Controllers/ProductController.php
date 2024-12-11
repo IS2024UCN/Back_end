@@ -51,7 +51,8 @@ class ProductController extends Controller
             $validatedData = $request->validate([
                 'title' => 'required|string|max:255',
                 'creator' => 'required|string|max:255',
-                'ISBN' => 'required|string|unique:products,ISBN',
+                'ISBN_books' => 'required_if:type,libro|nullable|string|unique:products,ISBN_books',
+                'ISBN_movies' => 'required_if:type,pelicula|nullable|string|unique:products,ISBN_movies',
                 'publisher' => 'nullable|string|max:255',
                 'release_date' => 'nullable|date',
                 'rental_price' => 'required|numeric|min:0',
@@ -61,7 +62,6 @@ class ProductController extends Controller
             $product = new Product();
             $product->title = $validatedData['title'];
             $product->creator = $validatedData['creator'];
-            $product->ISBN = $validatedData['ISBN'];
             $product->publisher = $validatedData['publisher'] ?? null;
             $product->release_date = $validatedData['release_date'] ?? null;
             $product->rental_price = $validatedData['rental_price'];
@@ -69,6 +69,14 @@ class ProductController extends Controller
             $product->available_stock = $validatedData['initial_stock'];
             $product->type = $validatedData['type'];
             $product->is_enabled = true;
+
+            if ($validatedData['type'] === 'libro') {
+                $product->ISBN_books = $validatedData['ISBN_books'];
+                $product->ISBN_movies = null;
+            } elseif ($validatedData['type'] === 'pelicula') {
+                $product->ISBN_movies = $validatedData['ISBN_movies'];
+                $product->ISBN_books = null;
+            }
 
             $product->save();
 
