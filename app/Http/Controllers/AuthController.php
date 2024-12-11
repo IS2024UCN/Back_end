@@ -44,7 +44,7 @@ class AuthController extends BaseController
             ], 401);
         }
 
-        if(!$user->is_active){
+        if(!$user->active){
             return response([
                 'message' => 'Usuario deshabilitado. Contacte al administrador',
                 'error' => true 
