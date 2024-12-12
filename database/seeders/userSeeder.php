@@ -22,5 +22,6 @@ class UserSeeder extends Seeder
             'role_id' => Role::where('name', 'Cliente')->first()->id,
             'active' => true
         ]);
+
     }
 }
