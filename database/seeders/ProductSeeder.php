@@ -23,7 +23,7 @@ class ProductSeeder extends Seeder
             'rental_price' => 999,
             'initial_stock' => 100,
             'available_stock' => 100,
-            'type' => 'Libro',
+            'type' => 'libro',
             'is_enabled' => true,
             
         ]);
@@ -37,7 +37,7 @@ class ProductSeeder extends Seeder
             'rental_price' => 1999,
             'initial_stock' => 50,
             'available_stock' => 50,
-            'type' => 'Pelicula',
+            'type' => 'pelicula',
             'is_enabled' => true,
             
         ]);

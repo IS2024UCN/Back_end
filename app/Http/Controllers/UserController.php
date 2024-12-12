@@ -226,69 +226,75 @@ class UserController extends Controller
     }
 
     // Método para habilitar o deshabilitar un trabajador
-    public function toggleWorkerStatus(Request $request, $id){
-        // Verificar si el usuario autenticado es un administrador
-        if ($request->user()->role_id != 2) {
-            return response([
-                'message' => 'No autorizado',
-                'data' => [],
-                'error' => true
-            ], 403);
-        }
+    public function toggleWorkerStatus(Request $request)
+{
+    // Validar los datos de la solicitud, incluyendo el ID
+    $validatedData = $request->validate([
+        'id' => 'required|integer|exists:users,id',
+    ]);
 
-        $users = User::find($id);
+    // Buscar el usuario por su ID
+    $user = User::find($validatedData['id']);
 
-        if (!$users) {
-            return response([
-                'message' => 'Trabajador no encontrado',
-                'data' => [],
-                'error' => true
-            ], 404);
-        }
-
-        // Cambiar el estado de is_enabled
-        $users->active = !$users->active;
-        $users->save();
-
-        $status = $users->active ? 'habilitado' : 'deshabilitado';
-
+    if (!$user) {
         return response([
-            'message' => "Trabajador $status exitosamente",
-            'data' => $users
-        ], 200);
+            'message' => 'Trabajador no encontrado',
+            'data' => [],
+            'error' => true
+        ], 404);
     }
+
+    // Alternar el estado del trabajador
+    $user->active = !$user->active;
+    $user->save();
+
+    $status = $user->active ? 'habilitado' : 'deshabilitado';
+
+    return response([
+        'message' => "Estado del trabajador actualizado exitosamente. El trabajador ha sido $status.",
+        'data' => $user
+    ], 200); 
+}
 
     // Método para actualizar la información de un trabajador
-    public function updateWorker(Request $request, $id){
-        $users = User::find($id);
-
-        if (!$users) {
-            return response([
-                'message' => 'Trabajador no encontrado',
-                'data' => [],
-                'error' => true
-            ], 404);
-        }
-
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255|regex:/^[a-zA-Z]+$/',
-            'phone' => 'required|string|max:15',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $users->id,
-        ], [
-            'last_name.required' => 'Apellido requerido',
-            'last_name.regex' => 'El apellido no puede contener números.'
-        ]);
-
-        $users->name = strtolower($request->input('name'));
-        $users->last_name = strtolower($request->input('last_name'));
-        $users->phone = '+56' . $request->input('phone');
-        $users->email = $request->input('email');
-        $users->save();
-
+    public function updateWorker(Request $request)
+{
+    // Verificar si el usuario autenticado es un administrador
+    if ($request->user()->role_id != 2) {
         return response([
-            'message' => 'Trabajador actualizado exitosamente',
-            'data' => $users
-        ], 200);
+            'message' => 'No autorizado',
+            'data' => [],
+            'error' => true
+        ], 403);
     }
+
+    // Validar los datos de la solicitud, incluyendo el RUT
+    $validatedData = $request->validate([
+        'rut' => 'required|string|max:255',
+        'new_name' => 'required|string|max:255',
+        'new_phone' => 'required|string|max:15',
+        'new_email' => 'required|string|email|max:255|unique:users,email,' . $request->user()->id,
+    ]);
+
+    // Buscar el usuario por su RUT
+    $users = User::where('rut', $validatedData['rut'])->first();
+
+    if (!$users) {
+        return response([
+            'message' => 'Trabajador no encontrado',
+            'data' => [],
+            'error' => true
+        ], 404);
+    }
+
+    $users->name = strtolower($validatedData['new_name']);
+    $users->phone = '+56' . $validatedData['new_phone'];
+    $users->email = $validatedData['new_email'];
+    $users->save();
+
+    return response([
+        'message' => 'Trabajador actualizado exitosamente',
+        'data' => $users
+    ], 200);
+}
 }
