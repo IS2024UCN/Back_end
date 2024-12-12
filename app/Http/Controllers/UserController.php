@@ -8,6 +8,8 @@ use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\Product;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -140,6 +142,7 @@ class UserController extends Controller
                 'new_password' => [
                     'required',
                     'min:8',
+                    'max:64',
                     'confirmed',
                     'regex:/[A-Z]/',
                     'regex:/[a-z]/',
@@ -161,16 +164,23 @@ class UserController extends Controller
                     400);
             }
 
+
             User::where('id', $user->id)->update(['password' => Hash::make($request->new_password)]);
 
             return response()->json([
                 'message' => 'Contraseña actualizada correctamente'],
             200);
         } catch (\Exception $e) {
+            log::error('Error al actualizar la contraseña: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Error interno del servidor',
+                'details' => env('APP_DEBUG') ? $e->getMessage() : 'Contacte con administracion'],
+                500);
+        } catch (ValidationException $e){
             return response()->json([
                 'error' => 'Error al actualizar la contraseña',
-                'details' => $e->getMessage()],
-                500);
+                'details' => $e->errors()],
+                422);
         }
     }
 
