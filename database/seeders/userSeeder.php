@@ -14,9 +14,39 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'rut' => '12345678-9',
+            'rut' => '123456789',
             'name' => 'Ernes Fuenzalida',
             'email' => 'vicho@vicho.com',
+            'password' => '123',
+            'phone' => '123456789',
+            'role_id' => Role::where('name', 'Cliente')->first()->id,
+            'active' => true
+        ]);
+
+        User::create([
+            'rut' => '123',
+            'name' => 'el admin',
+            'email' => 'admin@admin.com',
+            'password' => '123',
+            'phone' => '123456789',
+            'role_id' => Role::where('name', 'Administrador')->first()->id,
+            'active' => true
+        ]);
+
+        User::create([
+            'rut' => '12345',
+            'name' => 'el trabajador',
+            'email' => 'worker@worker.com',
+            'password' => '123',
+            'phone' => '123456789',
+            'role_id' => Role::where('name', 'Trabajador')->first()->id,
+            'active' => true
+        ]);
+
+        User::create([
+            'rut' => '123459',
+            'name' => 'el pepe',
+            'email' => 'cliente@cliente.com',
             'password' => '123',
             'phone' => '123456789',
             'role_id' => Role::where('name', 'Cliente')->first()->id,

@@ -85,4 +85,43 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    // metodo para editar el precio de un producto obteniendo su isbn
+    public function updateProductPrice(Request $request, $isbn){
+        try{
+            $product = Product::where('ISBN', $isbn)->first();
+            if ($product == null){
+                return response()->json([
+                    'error' => 'Producto no encontrado'
+                ], 404);
+            }
+
+            $validatedData = $request->validate([
+                'new_price' => 'required|numeric|min:0'
+            ], [
+                'new_price.required' => 'El campo precio es obligatorio',
+                'new_price.numeric' => 'El campo precio debe ser numérico',
+                'new_price.min' => 'El campo precio debe ser mayor o igual a 0'
+            ]);
+
+            $product->rental_price = $validatedData['new_price'];
+            $product->save();
+
+            return response()->json([
+                'message' => 'Precio actualizado correctamente',
+                'data' => $product
+            ]);
+
+        } catch (QueryException $e){
+            return response()->json([
+                'error' => 'Error al actualizar el precio del producto',
+                'details' => $e->getMessage()
+            ], 500);
+        } catch (Exception $e){
+            return response()->json([
+                'error' => 'Ocurrio un error inesperado',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

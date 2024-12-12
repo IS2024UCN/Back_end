@@ -16,6 +16,8 @@ Route::put('/workers/{id}/toggle-status', [\App\Http\Controllers\UserController:
 
 // Rutas del ProductController
 Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');
+Route::post('/registerProduct', [\App\Http\Controllers\ProductController::class, 'registerProduct'])->name('registerProduct');
+Route::put('/updateProductPrice/{ISBN}', [\App\Http\Controllers\ProductController::class, 'updateProductPrice'])->name('updateProductPrice');
 
 // Rutas para gestionar trabajadores
 Route::middleware('auth')->group(function () {

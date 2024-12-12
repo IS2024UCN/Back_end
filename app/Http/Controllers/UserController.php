@@ -201,8 +201,8 @@ class UserController extends Controller
         $offset = ($page - 1) * $limit;
 
         // Obtener los usuarios con paginación
-        $users = User::offset($offset)->limit($limit)->get();
-        $totalUsers = User::count();
+        $users = User::whereIn('role_id', [2, 3])->offset($offset)->limit($limit)->get();
+        $totalUsers = User::whereIn('role_id', [2, 3])->count();
         $totalPages = ceil($totalUsers / $limit);
 
         // Verificar si hay trabajadores
