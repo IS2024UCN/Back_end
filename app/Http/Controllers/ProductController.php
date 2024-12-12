@@ -51,7 +51,7 @@ class ProductController extends Controller
             $validatedData = $request->validate([
                 'title' => 'required|string|max:255',
                 'creator' => 'required|string|max:255',
-                'ISBN' => 'nullable|string|unique:products|max:255',
+                'ISBN' => 'nullable|string|unique:products|max:255|min:10',
                 'publisher' => 'nullable|string|max:255|min:10',
                 'release_date' => 'nullable|date',
                 'rental_price' => 'required|numeric|min:0',
