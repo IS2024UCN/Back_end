@@ -6,6 +6,8 @@ use App\Models\Product;
 use Illuminate\Http\Request;
 use Exception;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Log;
+
 
 class ProductController extends Controller
 {
@@ -44,6 +46,8 @@ class ProductController extends Controller
     
     public function registerProduct(Request $request){
         try{
+            
+            Log::info('Datos recibidos: ', $request->all()); // Verificar qué datos están llegando
             $validatedData = $request->validate([
                 'title' => 'required|string|max:255',
                 'creator' => 'required|string|max:255',

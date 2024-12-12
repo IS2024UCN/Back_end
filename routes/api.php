@@ -10,7 +10,6 @@ Route::post('/register', [\App\Http\Controllers\AuthController::class, 'register
 
 // Rutas del UserController
 Route::post('/update-Password', [\App\Http\Controllers\UserController::class, 'updatePassword'])->middleware(['api', 'auth']);
-Route::post('/registerWorker', [\App\Http\Controllers\UserController::class, 'registerWorker'])->name('registerWorker');
 Route::get('/getWorkers', [\App\Http\Controllers\UserController::class, 'getWorkers'])->name('getWorkers');
 Route::put('/workers/{id}/toggle-status', [\App\Http\Controllers\UserController::class, 'toggleWorkerStatus'])->name('toggleWorkerStatus');
 
@@ -18,7 +17,6 @@ Route::put('/workers/{id}/toggle-status', [\App\Http\Controllers\UserController:
 
 Route::post('/registerProduct', [\App\Http\Controllers\ProductController::class, 'registerProduct'])->name('registerProduct');
 Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');
-Route::post('/registerProduct', [\App\Http\Controllers\ProductController::class, 'registerProduct'])->name('registerProduct');
 Route::put('/updateProductPrice/{ISBN}', [\App\Http\Controllers\ProductController::class, 'updateProductPrice'])->name('updateProductPrice');
 
 // Rutas para gestionar trabajadores
