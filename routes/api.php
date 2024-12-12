@@ -15,6 +15,8 @@ Route::get('/getWorkers', [\App\Http\Controllers\UserController::class, 'getWork
 Route::put('/workers/{id}/toggle-status', [\App\Http\Controllers\UserController::class, 'toggleWorkerStatus'])->name('toggleWorkerStatus');
 
 // Rutas del ProductController
+
+Route::post('/registerProduct', [\App\Http\Controllers\ProductController::class, 'registerProduct'])->name('registerProduct');
 Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');
 
 // Rutas para gestionar trabajadores
