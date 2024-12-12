@@ -6,22 +6,18 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
-use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
-use Illuminate\Support\Facades\Log;
-use Exception;
-use Illuminate\Database\QueryException;
+use Tymon\JWTAuth\Facades\JWTAuth;
+
+
 
 class AuthController extends BaseController
 {
-    public function __construct()
-    {
+    public function __construct(){
         $this->middleware('auth:api', ['except' => ['login','register']]);
     }
 
-    public function login (Request $request)
-    {   
+    public function login (Request $request){   
         try{
         // Validacion de campos con mensaje personalizado para correo y formato incorrecto
         $request->validate([
@@ -86,56 +82,6 @@ class AuthController extends BaseController
         }
     }
 
-    public function updatePassword(Request $request){
-        try{
-            $request->validate([
-                'current_password' => 'required',
-                'new_password' => [
-                    'required',
-                    'min:8',
-                    'max:64',
-                    'confirmed',
-                    'regex:/[A-Z]/',
-                    'regex:/[a-z]/',
-                    'regex:/[0-9]/',
-                    'regex:/[@$!%*#?&]/'
-                ],
-            ]);
-
-            $user = Auth::user();
-
-            if(!Hash::check($request->current_password, $user->password)){
-                return response()->json([
-                    'error' => 'Contraseña actual incorrecta'],
-                    400);
-            }
-            if($request->current_password === $request->new_password){
-                return response()->json([
-                    'error' => 'La nueva contraseña no puede ser igual a la actual'],
-                    400);
-            }
-
-
-            User::where('id', $user->id)->update(['password' => Hash::make($request->new_password)]);
-
-            return response()->json([
-                'message' => 'Contraseña actualizada correctamente'],
-            200);
-        } catch (\Exception $e) {
-            log::error('Error al actualizar la contraseña: ' . $e->getMessage());
-            return response()->json([
-                'error' => 'Error interno del servidor',
-                'details' => env('APP_DEBUG') ? $e->getMessage() : 'Contacte con administracion'],
-                500);
-        } catch (ValidationException $e){
-            return response()->json([
-                'error' => 'Error al actualizar la contraseña',
-                'details' => $e->errors()],
-                422);
-        }
-    }
-
-
     public function logout (){
         try{
             Auth::logout();
@@ -144,7 +90,7 @@ class AuthController extends BaseController
                 'data' => [],
                 'error' => false
             ]);
-    }
+        }
         catch (\Exception $e) {
             return response([
               'message' => 'Error al cerrar sesion',
@@ -164,8 +110,7 @@ class AuthController extends BaseController
         ], 200);
     }
 
-    public function register(Request $request)
-    {
+    public function register(Request $request){
         try {
             // Validar los datos de entrada
             $request->validate([
@@ -255,8 +200,7 @@ class AuthController extends BaseController
         }
     }
 
-    private function validateRut($rut)
-    {
+    private function validateRut($rut){
         // Eliminar puntos y guiones
         $rut = str_replace(['.', '-'], '', strtoupper($rut));
         $number = substr($rut, 0, -1);
@@ -286,8 +230,6 @@ class AuthController extends BaseController
         // Comparar el dígito verificador calculado con el proporcionado
         return $dv_calculated === $dv;
     }
-
-    
 }
 
-    
+

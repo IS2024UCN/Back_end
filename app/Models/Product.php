@@ -17,7 +17,8 @@ class Product extends Model
     protected $fillable = [
         'title',
         'creator',
-        'ISBN',
+        'ISBN_books',
+        'ISBN_movies',
         'publisher',
         'release_date',
         'rental_price',
