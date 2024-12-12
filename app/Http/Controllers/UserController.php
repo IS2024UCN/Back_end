@@ -10,98 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
-    public function register(Request $request)
-    {
-        try {
-            // Validar los datos de entrada
-            $request->validate([
-                'rut' => ['required', 'string', 'unique:users', 'regex:/^[0-9]+[Kk0-9]$/', function($attribute, $value, $fail){
-                }],
-                'name' => ['required', 'string', 'min:3', 'regex:/^[a-zA-Z\s]+$/', function($attribute, $value, $fail){
-                    if (preg_match('/[0-9]/', $value)) {
-                        $fail('El nombre no puede contener números');
-                    }
-                }],
-                'last_name' => ['required', 'string', 'min:3', 'regex:/^[a-zA-Z\s]+$/', function($attribute, $value, $fail){
-                    if (preg_match('/[0-9]/', $value)) {
-                        $fail('El apellido no puede contener números');
-                    }
-                }],
-                'phone' => ['required', 'string', 'regex:/^[0-9]{9}$/', function($attribute, $value, $fail){
-                }],
-                
-                'email' => ['required', 'string', 'email', 'max:255', 'unique:users', function($attribute, $value, $fail){
-                    if(!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                        $fail('Formato incorrecto de correo');
-                    }
-                }],
-            ], [
-                'rut.unique' => 'Este RUT ya esta registrado en el sistema. Intente iniciar sesión.',
-                'rut.regex' => 'El RUT ingresado no es válido.',
-                'rut.required' => 'RUT requerido',
-                'email.unique' => 'Este correo electrónico ya esta registrado en el sistema. Intente iniciar sesión.',
-                'email.email' => 'Este correo electrónico no es válido.',
-                'email.required' => 'Correo requerido',
-                'phone.regex' => 'El teléfono móvil ingresado no es válido.',
-                'phone.required' => 'Telefono requrido',
-                'name.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
-                'name.required' => 'Nombre requerido',
-                'name.regex' => 'El nombre no puede contener números.',
-                'last_name.min' => 'Los nombres o apellidos deben tener más de 2 caracteres.',
-                'last_name.required' => 'Apellido requerido',
-                'last_name.regex' => 'El apellido no puede contener números.'
-                
-                
-            ]); 
-
-            // Validar el RUT chileno
-            $rut = strtoupper($request->input('rut'));
-            if (!$this->validateRut($rut)) {
-                return response([
-                    'message' => 'El RUT no es válido',
-                    'data' => [],
-                    'error' => true
-                ], 422);
-            }
-            // Convertir el RUT a mayúsculas
-            $rut = strtoupper($rut);
-            // Agregar el prefijo +56 al teléfono
-            $phone = '+56' . $request->input('phone');
-            $name = strtolower($request->input('name'));
-            $last_name = strtolower($request->input('last_name'));
-       
-            // Crear el usuario
-            $user = User::create([
-                'rut' => $rut,
-                'name' => $name . ' ' . $last_name,
-                'phone' => $phone,
-                'email' => $request->input('email'),
-                'password' => bcrypt($rut),
-                'role_id' => 1
-            ]);
-
-            // Generar un token de acceso para el usuario
-            $token = JWTAuth::fromUser($user);         
-
-            return response([
-                'message' => 'Usuario registrado exitosamente',
-                'data' => [
-                    'user' => $user,
-                    'token' => $token
-                ],
-                'error' => false
-            ], 201);
-        } catch (\Exception $e) {
-            return response([
-                'message' => 'Error al registrar el usuario',
-                'data' => [],
-                'error' => $e->getMessage()
-            ], 500);
-        }
-    }
-
-    private function validateRut($rut)
-    {
+    private function validateRut($rut){
         // Eliminar puntos y guiones
         $rut = str_replace(['.', '-'], '', strtoupper($rut));
         $number = substr($rut, 0, -1);
@@ -134,6 +43,10 @@ class UserController extends Controller
 
     public function updatePassword(Request $request){
         try{
+
+            echo $request;
+            print_r($request);
+
             $request->validate([
                 'current_password' => 'required',
                 'new_password' => [
@@ -173,8 +86,7 @@ class UserController extends Controller
         }
     }
 
-    public function registerWorker(Request $request)
-    {
+    public function registerWorker(Request $request){
         try {
             // Validar los datos de entrada
             $request->validate([
@@ -263,8 +175,7 @@ class UserController extends Controller
     }
 
     // Método para listar todos los usuarios con paginación
-    public function getWorkers(Request $request)
-    {
+    public function getWorkers(Request $request){
         // Determinar valores predeterminados en caso de no ingresar limit y page
         $limit = $request->query('limit', 10);
         $page = $request->query('page', 1);
@@ -305,8 +216,7 @@ class UserController extends Controller
     }
 
     // Método para habilitar o deshabilitar un trabajador
-    public function toggleWorkerStatus(Request $request, $id)
-    {
+    public function toggleWorkerStatus(Request $request, $id){
         // Verificar si el usuario autenticado es un administrador
         if ($request->user()->role_id != 2) {
             return response([
@@ -339,8 +249,7 @@ class UserController extends Controller
     }
 
     // Método para actualizar la información de un trabajador
-    public function updateWorker(Request $request, $id)
-    {
+    public function updateWorker(Request $request, $id){
         $users = User::find($id);
 
         if (!$users) {
