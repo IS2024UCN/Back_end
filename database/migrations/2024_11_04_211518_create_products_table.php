@@ -15,8 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('creator');
-            $table->string('ISBN_books')->nullable()->unique();
-            $table->string('ISBN_movies')->nullable()->unique();
+            $table->string('ISBN')->unique();
             $table->string('publisher')->nullable();
             $table->date('release_date')->nullable();
             $table->decimal('rental_price', 8, 2);
