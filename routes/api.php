@@ -6,12 +6,19 @@ use Illuminate\Support\Facades\Route;
 Route::post('/login', [\App\Http\Controllers\AuthController::class, 'login'])->name('login');
 Route::get('/userlogged', [\App\Http\Controllers\AuthController::class, 'userLogged'])->middleware(['api', 'auth']);
 Route::post('/logout', [\App\Http\Controllers\AuthController::class, 'logout'])->middleware(['api', 'auth']);
-Route::post('/update-Password', [\App\Http\Controllers\AuthController::class, 'updatePassword'])->middleware(['api', 'auth']);
-
 
 // Rutas del UserController
 Route::post('/register', [\App\Http\Controllers\UserController::class, 'register'])->name('register');
+Route::post('/update-Password', [\App\Http\Controllers\UserController::class, 'updatePassword'])->middleware(['api', 'auth']);
+Route::post('/registerWorker', [\App\Http\Controllers\UserController::class, 'registerWorker'])->name('registerWorker');
+Route::get('/getWorkers', [\App\Http\Controllers\UserController::class, 'getWorkers'])->name('getWorkers');
+Route::put('/workers/{id}/toggle-status', [\App\Http\Controllers\UserController::class, 'toggleWorkerStatus'])->name('toggleWorkerStatus');
 
 // Rutas del ProductController
 Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');
-Route::post('/register-Product', [\App\Http\Controllers\ProductController::class, 'registerProduct'])->name('registerProduct');
+
+// Rutas para gestionar trabajadores
+Route::middleware('auth')->group(function () {
+    Route::put('/workers/{id}', [\App\Http\Controllers\UserController::class, 'updateWorker']);
+});
+
