@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
-use Database\Seeders\Product as ProductSeeder;
+use Database\Seeders\ProductSeeder;
 class DatabaseSeeder extends Seeder
 {
     /**
@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call(RoleSeeder::class);
         $this->call(UserSeeder::class);
+        $this->call(ProductSeeder::class);
         
        
     }
