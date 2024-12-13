@@ -15,7 +15,7 @@ class ProductSeeder extends Seeder
     {
         //
         Product::create([
-            'title' => 'El Señor de los Anillos: La Comunidad del Anillo',
+            'title' => 'El Señor de los Anillos La Comunidad del Anillo',
             'creator' => 'J.R.R. Tolkien',
             'ISBN' => '9780261103573',
             'publisher' => 'HarperCollins',
