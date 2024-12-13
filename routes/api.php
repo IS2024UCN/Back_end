@@ -19,5 +19,5 @@ Route::put('/updateWorker', [\App\Http\Controllers\UserController::class, 'updat
 Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');
 Route::post('/registerProduct', [\App\Http\Controllers\ProductController::class, 'registerProduct'])->name('registerProduct');
 Route::put('/updateProductPrice', [\App\Http\Controllers\ProductController::class, 'updateProductPrice'])->name('updateProductPrice');
-
+Route::put('/replenishStock', [\App\Http\Controllers\ProductController::class, 'replenishStock'])->name('replenishStock');
 
