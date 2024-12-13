@@ -226,75 +226,155 @@ class UserController extends Controller
     }
 
     // Método para habilitar o deshabilitar un trabajador
-    public function toggleWorkerStatus(Request $request)
-{
-    // Validar los datos de la solicitud, incluyendo el ID
-    $validatedData = $request->validate([
-        'id' => 'required|integer|exists:users,id',
-    ]);
+    public function toggleWorkerStatus(Request $request){
+        // Validar los datos de la solicitud, incluyendo el ID
+        $validatedData = $request->validate([
+            'id' => 'required|integer|exists:users,id',
+        ]);
 
-    // Buscar el usuario por su ID
-    $user = User::find($validatedData['id']);
+        // Buscar el usuario por su ID
+        $user = User::find($validatedData['id']);
 
-    if (!$user) {
+        if (!$user) {
+            return response([
+                'message' => 'Trabajador no encontrado',
+                'data' => [],
+                'error' => true
+            ], 404);
+        }
+
+        // Alternar el estado del trabajador
+        $user->active = !$user->active;
+        $user->save();
+
+        $status = $user->active ? 'habilitado' : 'deshabilitado';
+
         return response([
-            'message' => 'Trabajador no encontrado',
-            'data' => [],
-            'error' => true
-        ], 404);
+            'message' => "Estado del trabajador actualizado exitosamente. El trabajador ha sido $status.",
+            'data' => $user
+        ], 200); 
     }
-
-    // Alternar el estado del trabajador
-    $user->active = !$user->active;
-    $user->save();
-
-    $status = $user->active ? 'habilitado' : 'deshabilitado';
-
-    return response([
-        'message' => "Estado del trabajador actualizado exitosamente. El trabajador ha sido $status.",
-        'data' => $user
-    ], 200); 
-}
-
+    
     // Método para actualizar la información de un trabajador
-    public function updateWorker(Request $request)
-{
-    // Verificar si el usuario autenticado es un administrador
-    if ($request->user()->role_id != 2) {
+    public function updateWorker(Request $request){
+        // Verificar si el usuario autenticado es un administrador
+        if ($request->user()->role_id != 2) {
+            return response([
+                'message' => 'No autorizado',
+                'data' => [],
+                'error' => true
+            ], 403);
+        }
+        
+        // de momento el metodo funciona solo cuando cambias un email,
+        // la parte del new_email se cae cuando no editas el correo (incluso si no lo quieres editar)
+        // Validar los datos de la solicitud, incluyendo el RUT y el estado activo
+        $validatedData = $request->validate([
+            'rut' => [
+            'required',
+            'string',
+            'max:255',
+            'regex:/^[0-9]+[Kk0-9]$/',
+            function($attribute, $value, $fail) {
+                if (!$this->validateRut($value)) {
+                $fail('El RUT no es válido.');
+                }
+            }
+            ],
+            'new_name' => [
+            'required',
+            'string',
+            'min:3',
+            'max:255',
+            'regex:/^[a-zA-Z\s]+$/',
+            function($attribute, $value, $fail) {
+                if (preg_match('/[0-9]/', $value)) {
+                $fail('El nombre no puede contener números.');
+                }
+            }
+            ],
+            'new_phone' => [
+            'required',
+            'string',
+            'regex:/^[0-9]{9}$/',
+            function($attribute, $value, $fail) {
+                if (!preg_match('/^[0-9]{9}$/', $value)) {
+                $fail('El teléfono móvil ingresado no es válido.');
+                }
+            }
+            ],
+            'new_email' => [
+            'required',
+            'string',
+            'email',
+            'max:255',
+            'unique:users,email,' . $request->user()->id,
+            function($attribute, $value, $fail) {
+                if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                $fail('Formato incorrecto de correo.');
+                }
+            }
+            ],
+            'string_active' => [
+            'required',
+            'string',
+            'in:activo,inactivo',
+            function($attribute, $value, $fail) {
+                if (!in_array($value, ['activo', 'inactivo'])) {
+                $fail('El estado debe ser "activo" o "inactivo".');
+                }
+            }
+            ],
+        ], [
+            'rut.required' => 'RUT requerido.',
+            'rut.regex' => 'El RUT ingresado no es válido.',
+            'new_name.required' => 'Nombre requerido.',
+            'new_name.min' => 'El nombre debe tener más de 2 caracteres.',
+            'new_name.regex' => 'El nombre no puede contener números.',
+            'new_phone.required' => 'Teléfono requerido.',
+            'new_phone.regex' => 'El teléfono móvil ingresado no es válido.',
+            'new_email.required' => 'Correo requerido.',
+            'new_email.email' => 'Este correo electrónico no es válido.',
+            'new_email.unique' => 'Este correo electrónico ya está registrado en el sistema.',
+            'string_active.required' => 'Estado requerido.',
+            'string_active.in' => 'El estado debe ser "activo" o "inactivo".',
+        ]);
+        
+        // Convertir el estado activo a booleano
+        $validatedData['new_active'] = $validatedData['string_active'] === 'activo' ? 1 : 0;
+        // Buscar el usuario por su RUT
+        $users = User::where('rut', $validatedData['rut'])->first();
+
+        if (!$users) {
+            return response([
+                'message' => 'Trabajador no encontrado. El rut no existe en el sistema.',
+                'data' => [],
+                'error' => true
+            ], 404);
+        }
+        
+        // no esta funcionando
+        // Verificar si el nuevo correo electrónico ya está registrado en otro usuario
+        if ($validatedData['new_email'] && User::where('email', $validatedData['new_email'])->where('rut', '!=', $validatedData['rut'])->exists()) {
+            return response([
+                'message' => 'El correo electrónico ya está registrado en otro usuario.',
+                'data' => [],
+                'error' => true
+            ], 422);
+        }
+        
+        $users->name = strtolower($validatedData['new_name']);
+        $users->phone = '+56' . $validatedData['new_phone'];
+        // tampoco esta funcionando esta validacion
+        if ($validatedData['new_email'] != $users->email) {
+            $users->email = $validatedData['new_email'];
+        }
+        $users->active = $validatedData['new_active'];
+        $users->save();
+    
         return response([
-            'message' => 'No autorizado',
-            'data' => [],
-            'error' => true
-        ], 403);
+            'message' => 'Trabajador actualizado exitosamente',
+            'data' => $users
+        ], 200);
     }
-
-    // Validar los datos de la solicitud, incluyendo el RUT
-    $validatedData = $request->validate([
-        'rut' => 'required|string|max:255',
-        'new_name' => 'required|string|max:255',
-        'new_phone' => 'required|string|max:15',
-        'new_email' => 'required|string|email|max:255|unique:users,email,' . $request->user()->id,
-    ]);
-
-    // Buscar el usuario por su RUT
-    $users = User::where('rut', $validatedData['rut'])->first();
-
-    if (!$users) {
-        return response([
-            'message' => 'Trabajador no encontrado',
-            'data' => [],
-            'error' => true
-        ], 404);
-    }
-
-    $users->name = strtolower($validatedData['new_name']);
-    $users->phone = '+56' . $validatedData['new_phone'];
-    $users->email = $validatedData['new_email'];
-    $users->save();
-
-    return response([
-        'message' => 'Trabajador actualizado exitosamente',
-        'data' => $users
-    ], 200);
-}
 }
