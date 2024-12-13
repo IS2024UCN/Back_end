@@ -264,64 +264,61 @@ class UserController extends Controller
             ], 403);
         }
         
-        // de momento el metodo funciona solo cuando cambias un email,
-        // la parte del new_email se cae cuando no editas el correo (incluso si no lo quieres editar)
         // Validar los datos de la solicitud, incluyendo el RUT y el estado activo
         $validatedData = $request->validate([
             'rut' => [
-            'required',
-            'string',
-            'max:255',
-            'regex:/^[0-9]+[Kk0-9]$/',
-            function($attribute, $value, $fail) {
-                if (!$this->validateRut($value)) {
-                $fail('El RUT no es válido.');
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[0-9]+[Kk0-9]$/',
+                function($attribute, $value, $fail) {
+                    if (!$this->validateRut($value)) {
+                        $fail('El RUT no es válido.');
+                    }
                 }
-            }
             ],
             'new_name' => [
-            'required',
-            'string',
-            'min:3',
-            'max:255',
-            'regex:/^[a-zA-Z\s]+$/',
-            function($attribute, $value, $fail) {
-                if (preg_match('/[0-9]/', $value)) {
-                $fail('El nombre no puede contener números.');
+                'required',
+                'string',
+                'min:3',
+                'max:255',
+                'regex:/^[a-zA-Z\s]+$/',
+                function($attribute, $value, $fail) {
+                    if (preg_match('/[0-9]/', $value)) {
+                        $fail('El nombre no puede contener números.');
+                    }
                 }
-            }
             ],
             'new_phone' => [
-            'required',
-            'string',
-            'regex:/^[0-9]{9}$/',
-            function($attribute, $value, $fail) {
-                if (!preg_match('/^[0-9]{9}$/', $value)) {
-                $fail('El teléfono móvil ingresado no es válido.');
+                'required',
+                'string',
+                'regex:/^[0-9]{9}$/',
+                function($attribute, $value, $fail) {
+                    if (!preg_match('/^[0-9]{9}$/', $value)) {
+                        $fail('El teléfono móvil ingresado no es válido.');
+                    }
                 }
-            }
             ],
             'new_email' => [
-            'required',
-            'string',
-            'email',
-            'max:255',
-            'unique:users,email,' . $request->user()->id,
-            function($attribute, $value, $fail) {
-                if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
-                $fail('Formato incorrecto de correo.');
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users,email,' . $request->user()->id,
+                function($attribute, $value, $fail) {
+                    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                        $fail('Formato incorrecto de correo.');
+                    }
                 }
-            }
             ],
             'string_active' => [
-            'required',
-            'string',
-            'in:activo,inactivo',
-            function($attribute, $value, $fail) {
-                if (!in_array($value, ['activo', 'inactivo'])) {
-                $fail('El estado debe ser "activo" o "inactivo".');
+                'required',
+                'boolean',
+                function($attribute, $value, $fail) {
+                    if (!in_array($value, [0, 1])) {
+                        $fail('El estado debe ser 0 (inactivo) o 1 (activo).');
+                    }
                 }
-            }
             ],
         ], [
             'rut.required' => 'RUT requerido.',
@@ -335,11 +332,9 @@ class UserController extends Controller
             'new_email.email' => 'Este correo electrónico no es válido.',
             'new_email.unique' => 'Este correo electrónico ya está registrado en el sistema.',
             'string_active.required' => 'Estado requerido.',
-            'string_active.in' => 'El estado debe ser "activo" o "inactivo".',
+            'string_active.boolean' => 'El estado debe ser 0 (inactivo) o 1 (activo).',
         ]);
         
-        // Convertir el estado activo a booleano
-        $validatedData['new_active'] = $validatedData['string_active'] === 'activo' ? 1 : 0;
         // Buscar el usuario por su RUT
         $users = User::where('rut', $validatedData['rut'])->first();
 
@@ -351,7 +346,6 @@ class UserController extends Controller
             ], 404);
         }
         
-        // no esta funcionando
         // Verificar si el nuevo correo electrónico ya está registrado en otro usuario
         if ($validatedData['new_email'] && User::where('email', $validatedData['new_email'])->where('rut', '!=', $validatedData['rut'])->exists()) {
             return response([
@@ -363,11 +357,10 @@ class UserController extends Controller
         
         $users->name = strtolower($validatedData['new_name']);
         $users->phone = '+56' . $validatedData['new_phone'];
-        // tampoco esta funcionando esta validacion
         if ($validatedData['new_email'] != $users->email) {
             $users->email = $validatedData['new_email'];
         }
-        $users->active = $validatedData['new_active'];
+        $users->active = $validatedData['string_active'];
         $users->save();
     
         return response([
