@@ -12,9 +12,18 @@ class Rent extends Model
     protected $fillable = [
         'state',
         'totalCost',
-        'daysRequested',
+        'requestDate',
         'startDate',
         'endDate',
+        'product_id',
+        'user_id'
+    ];
+
+    protected $casts = [
+        'requestDate' => 'datetime',
+        'startDate' => 'date',
+        'endDate' => 'date',
+        'totalCost' => 'decimal:2'
     ];
 
     public function product(){
@@ -22,6 +31,6 @@ class Rent extends Model
     }
 
     public function user(){
-        return $this->hasMany(User::class);
+        return $this->belongsTo(User::class);
     }
 }
