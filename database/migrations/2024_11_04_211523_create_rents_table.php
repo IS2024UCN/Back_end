@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('state');
             $table->decimal('totalCost', 8, 2);
-            $table->integer('daysRequested');
+            $table->timestamp('requestDate')->nullable();
             $table->date('startDate');
             $table->date('endDate');
             $table->unsignedBigInteger('product_id');

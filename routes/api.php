@@ -21,3 +21,8 @@ Route::post('/registerProduct', [\App\Http\Controllers\ProductController::class,
 Route::put('/updateProductPrice', [\App\Http\Controllers\ProductController::class, 'updateProductPrice'])->name('updateProductPrice');
 Route::put('/replenishStock', [\App\Http\Controllers\ProductController::class, 'replenishStock'])->name('replenishStock');
 
+// Rutas del RentController
+Route::get('/getRents', [\App\Http\Controllers\RentController::class, 'index'])->name('getRents');
+Route::get('/getRent/{rent}', [\App\Http\Controllers\RentController::class, 'show'])->name('getRent');
+Route::patch('/confirmRent/{rent}', [\App\Http\Controllers\RentController::class, 'confirm'])->name('confirmRent');
+Route::patch('/rejectRent/{rent}', [\App\Http\Controllers\RentController::class, 'reject'])->name('rejectRent');
