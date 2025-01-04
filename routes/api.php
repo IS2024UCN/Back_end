@@ -26,3 +26,4 @@ Route::get('/getRents', [\App\Http\Controllers\RentController::class, 'index'])-
 Route::get('/getRent/{rent}', [\App\Http\Controllers\RentController::class, 'show'])->name('getRent');
 Route::patch('/confirmRent/{rent}', [\App\Http\Controllers\RentController::class, 'confirm'])->name('confirmRent');
 Route::patch('/rejectRent/{rent}', [\App\Http\Controllers\RentController::class, 'reject'])->name('rejectRent');
+Route::post('/rentProduct', [\App\Http\Controllers\RentController::class, 'rentProduct'])->name('rentProduct');
