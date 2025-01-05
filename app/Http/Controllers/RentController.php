@@ -14,120 +14,78 @@ use Illuminate\Support\Facades\Validator;
 
 class RentController extends Controller
 {
-    public function index()
-    {
-        $rents = Rent::with(['product', 'user'])
-            ->where('state', 'pendiente')
-            ->get();
+    
+    //
+    public function getRents(Request $request){
+        // Determinar valores predeterminados en caso de no ingresar limit y page
+        $limit = $request->query('limit', 5);
+        $page = $request->query('page', 1);
 
-        if($rents->isEmpty()){
-            return response()->json([
-                'status' => 'error',
-                'message' => 'No hay solicitudes pendientes'
-            ], 200);
+        // validaciones de limit y page numericos
+        if (!is_numeric($limit) || $limit <= 0) {
+            $limit = 5;
         }
 
+        if (!is_numeric($page) || $page <= 0) {
+            $page = 1;
+        }
+
+        // Calcular el offset
+        $offset = ($page - 1) * $limit;
+
+        // Obtener las rentas con estado 0 (pendiente) con paginación
+        $rents = Rent::where('state', 0)->offset($offset)->limit($limit)->get();
+        $totalRents = Rent::where('state', 0)->count();
+        $totalPages = (int) ceil($totalRents / $limit);
+
+        // Construir la respuesta
         return response()->json([
-            'status' => 'success',
-            'data' => RentResource::collection($rents)
+            'total_rents' => $totalRents,
+            'total_pages' => $totalPages,
+            'current_page' => $page,
+            'limit' => $limit,
+            'data' => $rents,
+            'has_more_pages' => $page < $totalPages
         ]);
     }
 
-    public function show(Rent $rent)
+    public function updateRentStatus(Request $request)
     {
-        try{
+        // Validar los datos de la solicitud
+        $validator = Validator::make($request->all(), [
+            'rent_id' => 'required|exists:rents,id',
+            'state' => 'required|in:1,2',
+        ]);
 
-            $rent->load(['product', 'user']);
-
-            if(!$rent->product){
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'La solicitud no tiene un producto asociado'
-                ], 400);
-            }
-
-            if(!$rent->product->is_enabled) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'El producto no está disponible actualmente'
-                ], 400);
-            }
-
+        if ($validator->fails()) {
             return response()->json([
-                'status' => 'success',
-                'data' => new RentResource($rent)
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al procesar la solicitud'
-            ], 500);
+                'error' => $validator->errors()
+            ], 400);
         }
-    }
 
-    public function confirm(Rent $rent)
-    {
-        try{
-
-            if($rent->state !== 'pendiente') {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Solo se pueden confirmar solicitudes pendientes'
-                ], 400);
-            }
-
-            if($rent->product->available_stock <= 0) {
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'No hay stock disponible para este producto'
-                ], 400);
-            }
-
-            DB::transaction(function() use ($rent) {
-                $rent->product->decrement('available_stock');
-
-                $rent->state = 'confirmado';
-                $rent->save(); 
-            });
-
+        // Buscar la solicitud de arriendo por su ID
+        $rent = Rent::find($request->rent_id);
+        if (!$rent || $rent->state != 'pendiente') {
             return response()->json([
-                'status' => 'success',
-                'message' => 'Solicitud confirmada exitosamente',
-                'data' => new RentResource($rent)
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al procesar la solicitud'
-            ], 500);
+                'error' => 'Solicitud de arriendo no encontrada o no está pendiente'
+            ], 404);
         }
-    }
 
-    public function reject(Rent $rent)
-    {
-        try{
-    
-            if($rent->state !== 'pendiente'){
-                return response()->json([
-                    'status' => 'error',
-                    'message' => 'Solo se pueden rechazar solicitudes pendientes'
-                ], 400);
-            }
+        // Actualizar el estado de la solicitud
+        $rent->state = $request->state;
 
-            $rent->state = 'rechazado';
-            $rent->save();
-
-            return response()->json([
-                'status' => 'success',
-                'message' => 'Solicitud rechazada exitosamente',
-                'data' => new RentResource($rent)
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Error al procesar la solicitud'
-            ], 500);
+        if ($request->state == 1) {
+            // Confirmar la solicitud de arriendo
+            $rent->startDate = now();
+            $rent->endDate = now()->addDays($rent->daysRent);
         }
+
+        $rent->save();
+
+        return response()->json([
+            'message' => 'Estado de la solicitud de arriendo actualizado correctamente',
+            'data' => $rent
+        ], 200);
     }
 
     /**
