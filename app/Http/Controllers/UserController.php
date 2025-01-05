@@ -399,7 +399,7 @@ class UserController extends Controller
         }
         
         $users->name = strtolower($validatedData['new_name']);
-        $users->phone = '+56' . $validatedData['new_phone'];
+        $users->phone = $validatedData['new_phone'];
         if ($validatedData['new_email'] != $users->email) {
             $users->email = $validatedData['new_email'];
         }
@@ -422,7 +422,6 @@ class UserController extends Controller
                 'error' => true
             ], 403);
         }
-        
         
         // Validar los datos de la solicitud, incluyendo el RUT y el estado activo
         $validatedData = $request->validate([
@@ -516,7 +515,7 @@ class UserController extends Controller
         }
         
         $users->name = strtolower($validatedData['new_name']);
-        $users->phone = '+56' . $validatedData['new_phone'];
+        $users->phone = $validatedData['new_phone'];
         if ($validatedData['new_email'] != $users->email) {
             $users->email = $validatedData['new_email'];
         }
