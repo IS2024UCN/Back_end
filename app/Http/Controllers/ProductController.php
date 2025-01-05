@@ -132,4 +132,47 @@ class ProductController extends Controller
             ], 500);
         }
     }
+
+    public function replenishStock(Request $request) {
+        try {
+            // Validar los datos de la solicitud, incluyendo el ISBN y la cantidad a agregar
+            $validatedData = $request->validate([
+                'ISBN' => 'required|string|max:255',
+                'quantity' => 'required|integer|min:1'
+            ], [
+                'ISBN.required' => 'El campo ISBN es obligatorio',
+                'quantity.required' => 'El campo cantidad es obligatorio',
+                'quantity.integer' => 'El campo cantidad debe ser un número entero',
+                'quantity.min' => 'El campo cantidad debe ser mayor o igual a 1'
+            ]);
+
+            // Buscar el producto por su ISBN
+            $product = Product::where('ISBN', $validatedData['ISBN'])->first();
+            if ($product == null) {
+                return response()->json([
+                    'error' => 'Producto no encontrado'
+                ], 404);
+            }
+
+            // Incrementar el stock disponible
+            $product->available_stock += $validatedData['quantity'];
+            $product->save();
+
+            return response()->json([
+                'message' => 'Stock actualizado correctamente',
+                'data' => $product
+            ]);
+
+        } catch (QueryException $e) {
+            return response()->json([
+                'error' => 'Error al actualizar el stock del producto',
+                'details' => $e->getMessage()
+            ], 500);
+        } catch (Exception $e) {
+            return response()->json([
+                'error' => 'Ocurrió un error inesperado',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

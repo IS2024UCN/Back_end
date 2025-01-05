@@ -14,9 +14,9 @@ class UserSeeder extends Seeder
     public function run(): void
     {
         User::create([
-            'rut' => '123456789',
+            'rut' => '101007928',
             'name' => 'Ernes Fuenzalida',
-            'email' => 'vicho@vicho.com',
+            'email' => 'cliente1@cliente1.com',
             'password' => '123',
             'phone' => '123456789',
             'role_id' => Role::where('name', 'Cliente')->first()->id,
@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
-            'rut' => '123',
+            'rut' => '214808919',
             'name' => 'el admin',
             'email' => 'admin@admin.com',
             'password' => '123',
@@ -34,7 +34,7 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
-            'rut' => '12345',
+            'rut' => '199283715',
             'name' => 'el trabajador',
             'email' => 'worker@worker.com',
             'password' => '123',
@@ -44,7 +44,7 @@ class UserSeeder extends Seeder
         ]);
 
         User::create([
-            'rut' => '123459',
+            'rut' => '199283510',
             'name' => 'el pepe',
             'email' => 'cliente@cliente.com',
             'password' => '123',
