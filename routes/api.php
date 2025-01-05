@@ -14,6 +14,8 @@ Route::post('/registerWorker', [\App\Http\Controllers\UserController::class, 're
 Route::get('/getWorkers', [\App\Http\Controllers\UserController::class, 'getWorkers'])->name('getWorkers');
 Route::put('/toggleWorkerStatus', [\App\Http\Controllers\UserController::class, 'toggleWorkerStatus'])->name('toggleWorkerStatus');
 Route::put('/updateWorker', [\App\Http\Controllers\UserController::class, 'updateWorker'])->name('updateWorker');
+Route::get('/getClients', [\App\Http\Controllers\UserController::class, 'getClients'])->name('getClients');
+Route::put('/updateClient', [\App\Http\Controllers\UserController::class, 'updateClient'])->name('updateClient');
 
 // Rutas del ProductController
 Route::get('/getProducts', [\App\Http\Controllers\ProductController::class, 'getProducts'])->name('getProducts');

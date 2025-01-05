@@ -225,6 +225,47 @@ class UserController extends Controller
         ]);
     }
 
+    // metodo getClients
+    public function getClients(Request $request){
+        // Determinar valores predeterminados en caso de no ingresar limit y page
+        $limit = $request->query('limit', 10);
+        $page = $request->query('page', 1);
+
+        // Validaciones de limit y page numéricos
+        if (!is_numeric($limit) || $limit <= 0) {
+            $limit = 10;
+        }
+
+        if (!is_numeric($page) || $page <= 0) {
+            $page = 1;
+        }
+
+        // Calcular el offset
+        $offset = ($page - 1) * $limit;
+
+        // Obtener los usuarios con paginación
+        $users = User::whereIn('role_id', [1])->offset($offset)->limit($limit)->get();
+        $totalUsers = User::whereIn('role_id', [1])->count();
+        $totalPages = ceil($totalUsers / $limit);
+
+        // Verificar si hay trabajadores
+        if ($totalUsers == 0) {
+            return response()->json([
+                'message' => 'No hay clientes para mostrar',
+                'data' => []
+            ], 200);
+        }
+
+        // Construir la respuesta
+        return response()->json([
+            'total_users' => $totalUsers,
+            'total_pages' => $totalPages,
+            'current_page' => $page,
+            'limit' => $limit,
+            'data' => $users
+        ]);
+    }
+
     // Método para habilitar o deshabilitar un trabajador
     public function toggleWorkerStatus(Request $request){
         // Validar los datos de la solicitud, incluyendo el ID
@@ -367,6 +408,123 @@ class UserController extends Controller
     
         return response([
             'message' => 'Trabajador actualizado exitosamente',
+            'data' => $users
+        ], 200);
+    }
+
+    // Método para actualizar la información de un trabajador
+    public function updateClient(Request $request){
+        // Verificar si el usuario autenticado es un administrador o un trabajador
+        if ($request->user()->role_id != 2 && $request->user()->role_id != 3) {
+            return response([
+                'message' => 'No autorizado',
+                'data' => [],
+                'error' => true
+            ], 403);
+        }
+        
+        
+        // Validar los datos de la solicitud, incluyendo el RUT y el estado activo
+        $validatedData = $request->validate([
+            'rut' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[0-9]+[Kk0-9]$/',
+                function($attribute, $value, $fail) {
+                    if (!$this->validateRut($value)) {
+                        $fail('El RUT no es válido.');
+                    }
+                }
+            ],
+            'new_name' => [
+                'required',
+                'string',
+                'min:3',
+                'max:255',
+                'regex:/^[a-zA-Z\s]+$/',
+                function($attribute, $value, $fail) {
+                    if (preg_match('/[0-9]/', $value)) {
+                        $fail('El nombre no puede contener números.');
+                    }
+                }
+            ],
+            'new_phone' => [
+                'required',
+                'string',
+                'regex:/^[0-9]{9}$/',
+                function($attribute, $value, $fail) {
+                    if (!preg_match('/^[0-9]{9}$/', $value)) {
+                        $fail('El teléfono móvil ingresado no es válido.');
+                    }
+                }
+            ],
+            'new_email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users,email,' . $request->user()->id,
+                function($attribute, $value, $fail) {
+                    if (!filter_var($value, FILTER_VALIDATE_EMAIL)) {
+                        $fail('Formato incorrecto de correo.');
+                    }
+                }
+            ],
+            'string_active' => [
+                'required',
+                'boolean',
+                function($attribute, $value, $fail) {
+                    if (!in_array($value, [0, 1])) {
+                        $fail('El estado debe ser 0 (inactivo) o 1 (activo).');
+                    }
+                }
+            ],
+        ], [
+            'rut.required' => 'RUT requerido.',
+            'rut.regex' => 'El RUT ingresado no es válido.',
+            'new_name.required' => 'Nombre requerido.',
+            'new_name.min' => 'El nombre debe tener más de 2 caracteres.',
+            'new_name.regex' => 'El nombre no puede contener números.',
+            'new_phone.required' => 'Teléfono requerido.',
+            'new_phone.regex' => 'El teléfono móvil ingresado no es válido.',
+            'new_email.required' => 'Correo requerido.',
+            'new_email.email' => 'Este correo electrónico no es válido.',
+            'new_email.unique' => 'Este correo electrónico ya está registrado en el sistema.',
+            'string_active.required' => 'Estado requerido.',
+            'string_active.boolean' => 'El estado debe ser 0 (inactivo) o 1 (activo).',
+        ]);
+        
+        // Buscar el usuario por su RUT
+        $users = User::where('rut', $validatedData['rut'])->first();
+
+        if (!$users) {
+            return response([
+                'message' => 'Cliente no encontrado. El rut no existe en el sistema.',
+                'data' => [],
+                'error' => true
+            ], 404);
+        }
+        
+        // Verificar si el nuevo correo electrónico ya está registrado en otro usuario
+        if ($validatedData['new_email'] && User::where('email', $validatedData['new_email'])->where('rut', '!=', $validatedData['rut'])->exists()) {
+            return response([
+                'message' => 'El correo electrónico ya está registrado en otro usuario.',
+                'data' => [],
+                'error' => true
+            ], 422);
+        }
+        
+        $users->name = strtolower($validatedData['new_name']);
+        $users->phone = '+56' . $validatedData['new_phone'];
+        if ($validatedData['new_email'] != $users->email) {
+            $users->email = $validatedData['new_email'];
+        }
+        $users->active = $validatedData['string_active'];
+        $users->save();
+    
+        return response([
+            'message' => 'Cliente actualizado exitosamente',
             'data' => $users
         ], 200);
     }
