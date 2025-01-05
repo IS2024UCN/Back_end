@@ -71,7 +71,7 @@ class RentController extends Controller
 
         // Buscar la solicitud de arriendo por su ID
         $rent = Rent::find($request->rent_id);
-        if (!$rent || $rent->state != 'pendiente') {
+        if (!$rent || $rent->state != '0') {
             return response()->json([
                 'error' => 'Solicitud de arriendo no encontrada o no está pendiente'
             ], 404);
