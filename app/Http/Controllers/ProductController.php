@@ -12,12 +12,12 @@ class ProductController extends Controller
     //
     public function getProducts(Request $request){
         // Determinar valores predeterminados en caso de no ingresar limit y page
-        $limit = $request->query('limit', 10);
+        $limit = $request->query('limit', 5);
         $page = $request->query('page', 1);
 
         // validaciones de limit y page numericos
         if (!is_numeric($limit) || $limit <= 0) {
-            $limit = 10;
+            $limit = 5;
         }
 
         if (!is_numeric($page) || $page <= 0) {
@@ -30,7 +30,7 @@ class ProductController extends Controller
         // Obtener los productos con paginación
         $products = Product::offset($offset)->limit($limit)->get();
         $totalProducts = Product::count();
-        $totalPages = ceil($totalProducts / $limit);
+        $totalPages = (int) ceil($totalProducts / $limit);
 
         // Construir la respuesta
         return response()->json([
@@ -38,7 +38,8 @@ class ProductController extends Controller
             'total_pages' => $totalPages,
             'current_page' => $page,
             'limit' => $limit,
-            'data' => $products
+            'data' => $products,
+            'has_more_pages' => $page < $totalPages
         ]);
     }
     

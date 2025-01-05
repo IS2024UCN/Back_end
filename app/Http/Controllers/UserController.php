@@ -211,7 +211,11 @@ class UserController extends Controller
         if ($totalUsers == 0) {
             return response()->json([
                 'message' => 'No hay trabajadores para mostrar',
-                'data' => []
+                'data' => [],
+                'total_users' => $totalUsers,
+                'total_pages' => $totalPages,
+                'current_page' => $page,
+                'limit' => $limit
             ], 200);
         }
 
@@ -252,7 +256,11 @@ class UserController extends Controller
         if ($totalUsers == 0) {
             return response()->json([
                 'message' => 'No hay clientes para mostrar',
-                'data' => []
+                'data' => [],
+                'total_users' => $totalUsers,
+                'total_pages' => $totalPages,
+                'current_page' => $page,
+                'limit' => $limit
             ], 200);
         }
 
