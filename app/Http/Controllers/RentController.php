@@ -162,8 +162,7 @@ class RentController extends Controller
         // Validar los datos de la solicitud
         $validator = Validator::make($request->all(), [
             'product_id' => 'required|exists:products,id',
-            'startDate' => 'required|date|after_or_equal:today',
-            'endDate' => 'required|date|after:startDate',
+            'daysRent' => 'required|integer|min:1|max:30',
         ]);
 
         if ($validator->fails()) {
@@ -181,10 +180,7 @@ class RentController extends Controller
         }
 
         // Calcular el costo total del arriendo
-        $startDate = new \DateTime($request->startDate);
-        $endDate = new \DateTime($request->endDate);
-        $interval = $startDate->diff($endDate);
-        $days = $interval->days + 1; // Incluir el día de inicio
+        $days = $request->daysRent;
         $totalCost = $days * $product->rental_price;
 
         // Confirmar la solicitud de arriendo
@@ -200,8 +196,9 @@ class RentController extends Controller
         $rent->state = 'pendiente';
         $rent->totalCost = $totalCost;
         $rent->requestDate = now();
-        $rent->startDate = $request->startDate;
-        $rent->endDate = $request->endDate;
+        $rent->daysRent = $days;
+        $rent->startDate = null;
+        $rent->endDate = null;
         $rent->product_id = $product->id;
         $rent->user_id = Auth::id();
         $rent->save();

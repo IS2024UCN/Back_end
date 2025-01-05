@@ -16,8 +16,9 @@ return new class extends Migration
             $table->string('state');
             $table->decimal('totalCost', 8, 2);
             $table->timestamp('requestDate')->nullable();
-            $table->date('startDate');
-            $table->date('endDate');
+            $table->integer('daysRent');
+            $table->date('startDate')->nullable();
+            $table->date('endDate')->nullable();
             $table->unsignedBigInteger('product_id');
             $table->foreign('product_id')->references('id')->on('products');
             $table->unsignedBigInteger('user_id');
