@@ -38,6 +38,12 @@ class RentController extends Controller
         $totalRents = Rent::where('state', 0)->count();
         $totalPages = (int) ceil($totalRents / $limit);
 
+        // Agregar el título del producto a cada renta y eliminar el objeto producto
+        $rents->each(function ($rent) {
+            $rent->product_title = $rent->product->title;
+            unset($rent->product); // Eliminar el objeto producto
+        });
+
         // Construir la respuesta
         return response()->json([
             'total_rents' => $totalRents,
@@ -151,7 +157,7 @@ class RentController extends Controller
 
         // Crear la solicitud de arriendo
         $rent = new Rent();
-        $rent->state = 'pendiente';
+        $rent->state = '0';
         $rent->totalCost = $totalCost;
         $rent->requestDate = now();
         $rent->daysRent = $days;
